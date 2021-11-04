@@ -42,7 +42,6 @@ export class AppController {
   async getFile(@Res() res: Response, @Param('uuid') uuid) {
     const path = await this.appService.getImagePath(uuid);
     if (!path) return 'not found';
-    console.log(path);
     const streamFile = createReadStream(join(process.cwd(), path));
     streamFile.pipe(res);
   }
