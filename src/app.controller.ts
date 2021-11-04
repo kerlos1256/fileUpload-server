@@ -82,7 +82,5 @@ export class AppController {
 
     // Stream the video chunk to the client
     videoStream.pipe(res);
-    // const streamFile = createReadStream(join(process.cwd(), path));
-    // streamFile.pipe(res);
   }
 }
