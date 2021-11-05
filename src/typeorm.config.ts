@@ -3,12 +3,11 @@ import { file } from './entities/image.entity';
 
 export const typeOrmConfig: PostgresConnectionOptions = {
   type: 'postgres',
-  // host: 'ec2-34-226-18-183.compute-1.amazonaws.com',
   url: process.env.DATABASE_URL,
-  // database: 'dflmkt5n2ckeck',
+  // database: 'image-upload',
   // port: 5432,
-  // username: 'lylhgqxjlyymdz',
-  // password: 'ac02afa0d350840cdee62854bcf15692775cb1af64eef5d58de4a0ad54173617',
+  // username: 'postgres',
+  // password: '123456',
   entities: [file],
   synchronize: true,
 };

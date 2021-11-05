@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './typeorm.config';
 import { file } from './entities/image.entity';
-import { imageExt, videoExt } from './fileTypes';
+import allExt from './fileTypes';
 
 @Module({
   imports: [
@@ -18,12 +18,8 @@ import { imageExt, videoExt } from './fileTypes';
       storage: diskStorage({
         destination: async function (req, file, cb) {
           const ext = extname(file.originalname);
-          if (imageExt.includes(ext)) {
-            return cb(null, './uploads/images');
-          }
-          if (videoExt.includes(ext)) {
-            return cb(null, './uploads/videos');
-          }
+          if (!allExt.includes(ext))
+            return cb(Error('invalid file extintion'), './uploads');
           cb(null, './uploads');
         },
         filename: function (req, file, cb) {
