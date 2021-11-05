@@ -5,7 +5,6 @@ export const typeOrmConfig: PostgresConnectionOptions = {
   type: 'postgres',
   // host: 'ec2-34-226-18-183.compute-1.amazonaws.com',
   url: process.env.DATABASE_URL,
-  ssl: true,
   // database: 'dflmkt5n2ckeck',
   // port: 5432,
   // username: 'lylhgqxjlyymdz',
