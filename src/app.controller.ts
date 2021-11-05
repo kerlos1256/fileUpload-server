@@ -43,6 +43,11 @@ export class AppController {
     return this.appService.getFiles();
   }
 
+  @Post('new/:test')
+  async new(@Param('test') test) {
+    return this.appService.new(test);
+  }
+
   @Get('/image/:uuid')
   async getFile(@Res() res: Response, @Param('uuid') uuid) {
     const path = await this.appService.getImagePath(uuid);

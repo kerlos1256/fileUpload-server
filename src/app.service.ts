@@ -44,4 +44,13 @@ export class AppService {
   async getFiles() {
     return this.fileRepo.find();
   }
+  async new(test: string) {
+    return this.fileRepo.create({
+      ext: 'text',
+      name: test,
+      path: 'test/test',
+      type: 'unknown',
+      uuid: 'awdafaw5da31s3d' + test,
+    });
+  }
 }
