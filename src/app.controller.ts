@@ -38,6 +38,11 @@ export class AppController {
     res.send(fileDetials);
   }
 
+  @Get('/files')
+  async getFiles() {
+    return this.appService.getFiles();
+  }
+
   @Get('/image/:uuid')
   async getFile(@Res() res: Response, @Param('uuid') uuid) {
     const path = await this.appService.getImagePath(uuid);

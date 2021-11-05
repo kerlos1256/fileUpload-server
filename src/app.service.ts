@@ -40,4 +40,8 @@ export class AppService {
     if (!video || video.type !== 'video') return false;
     return video.path;
   }
+
+  async getFiles() {
+    return this.fileRepo.find();
+  }
 }
