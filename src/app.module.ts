@@ -19,8 +19,8 @@ import allExt from './fileTypes';
         destination: async function (req, file, cb) {
           const ext = extname(file.originalname);
           if (!allExt.includes(ext))
-            return cb(Error('invalid file extintion'), './uploads');
-          cb(null, './uploads');
+            return cb(Error('invalid file extintion'), './dist/uploads');
+          cb(null, './dist/uploads');
         },
         filename: function (req, file, cb) {
           const random = uuid();
