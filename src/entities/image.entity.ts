@@ -6,17 +6,17 @@ export class file {
   id: number;
 
   @Column()
-  uuid: string;
+  driveId: string;
 
   @Column()
   name: string;
+
+  @Column()
+  size: number;
 
   @Column()
   ext: string;
 
   @Column()
   type: 'image' | 'video' | 'unknown';
-
-  @Column()
-  path: string;
 }

@@ -10,25 +10,28 @@ import { typeOrmConfig } from './typeorm.config';
 import { file } from './entities/image.entity';
 import allExt from './fileTypes';
 
+const customStorage = require('./MulterCustomStorage')();
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([file]),
     TypeOrmModule.forRoot(typeOrmConfig),
     MulterModule.register({
-      storage: diskStorage({
-        destination: async function (req, file, cb) {
-          const ext = extname(file.originalname);
-          if (!allExt.includes(ext))
-            return cb(Error('invalid file extintion'), './dist/uploads');
-          cb(null, './dist/uploads');
-        },
-        filename: function (req, file, cb) {
-          const random = uuid();
-          const filename = file.originalname.split('.').slice(0, -1).join('.');
-          console.log('filename', filename);
-          cb(null, filename + '&%-%&' + random + extname(file.originalname));
-        },
-      }),
+      storage: customStorage,
+      // diskStorage({
+      //   destination: async function (req, file, cb) {
+      //     const ext = extname(file.originalname);
+      //     if (!allExt.includes(ext))
+      //       return cb(Error('invalid file extintion'), './dist/uploads');
+      //     cb(null, './dist/uploads');
+      //   },
+      //   filename: function (req, file, cb) {
+      //     const random = uuid();
+      //     const filename = file.originalname.split('.').slice(0, -1).join('.');
+      //     console.log('filename', filename);
+      //     cb(null, filename + '&%-%&' + random + extname(file.originalname));
+      //   },
+      // }),
     }),
   ],
   controllers: [AppController],

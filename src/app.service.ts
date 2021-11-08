@@ -4,53 +4,34 @@ import { extname } from 'path';
 import { Repository } from 'typeorm';
 import { file } from './entities/image.entity';
 import { videoExt, imageExt } from './fileTypes';
+import { CustomMulterFile } from './interfaces';
 
 @Injectable()
 export class AppService {
   constructor(@InjectRepository(file) readonly fileRepo: Repository<file>) {}
-  async addFile(file: Express.Multer.File) {
+
+  async addFile(file: CustomMulterFile) {
     const ext = extname(file.originalname);
-    const fileNameSplit = file.filename
-      .split('.')
-      .slice(0, -1)
-      .join('.')
-      .split('&%-%&');
+    const fileNameSplit = file.originalname.split('.').slice(0, -1).join('.');
     const type = imageExt.includes(ext)
       ? 'image'
       : videoExt.includes(ext)
       ? 'video'
       : 'unknown';
     return this.fileRepo.save({
-      name: fileNameSplit[0],
-      uuid: fileNameSplit[1],
+      name: fileNameSplit,
+      driveId: file.driveId,
+      size: JSON.parse(file.driveSize),
       ext: ext,
       type,
-      path: file.path,
     });
-  }
-  async getImagePath(uuid: string) {
-    const image = await this.fileRepo.findOne({ uuid });
-
-    if (!image || image.type !== 'image') return false;
-    return image.path;
-  }
-  async getVideoPath(uuid: string) {
-    const video = await this.fileRepo.findOne({ uuid });
-
-    if (!video || video.type !== 'video') return false;
-    return video.path;
   }
 
   async getFiles() {
     return this.fileRepo.find();
   }
-  async new(test: string) {
-    return this.fileRepo.create({
-      ext: 'text',
-      name: test,
-      path: 'test/test',
-      type: 'unknown',
-      uuid: 'awdafaw5da31s3d' + test,
-    });
+
+  async getFile(fileId: string) {
+    return this.fileRepo.findOne({ driveId: fileId });
   }
 }

@@ -7,12 +7,26 @@ import {
   Req,
   UploadedFile,
   UseInterceptors,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
-import { createReadStream, statSync } from 'fs';
+import { Response, Request } from 'express';
+import { createReadStream, createWriteStream, ReadStream, statSync } from 'fs';
+import { google } from 'googleapis';
 import { join } from 'path';
+import { Readable } from 'stream';
 import { AppService } from './app.service';
+import { CustomMulterFile } from './interfaces';
+
+const keyPath = `${process.cwd()}/key.json`;
+
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: keyPath,
+  scopes: SCOPES,
+});
+const drive = google.drive({ version: 'v3', auth });
 
 @Controller()
 export class AppController {
@@ -21,18 +35,26 @@ export class AppController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() uploadedFile: CustomMulterFile,
     @Res() res: Response,
   ) {
-    const File = await this.appService.addFile(file);
-    const fileId = file.filename
-      .split('.')
-      .slice(0, -1)
-      .join('.')
-      .split('&%-%&')[1];
+    // const fileMetadata = {
+    //   name: uploadedFile.originalname,
+    // };
 
+    // const media = {
+    //   mimeType: uploadedFile.mimetype,
+    //   body: uploadedFile.stream,
+    // };
+
+    // const file = await drive.files.create({
+    //   requestBody: fileMetadata,
+    //   media,
+    //   fields: 'id',
+    // });
+    const File = await this.appService.addFile(uploadedFile);
     const fileDetials = {
-      fileId,
+      fileId: File.driveId,
       type: File.type,
     };
     res.send(fileDetials);
@@ -43,31 +65,40 @@ export class AppController {
     return this.appService.getFiles();
   }
 
-  @Post('new/:test')
-  async new(@Param('test') test) {
-    return this.appService.new(test);
+  @Get('/image/:id')
+  async getFile(@Res() resp: Response, @Param('id') fileId: string) {
+    drive.files
+      .get({ fileId, alt: 'media' }, { responseType: 'stream' })
+      .then((res) => {
+        return new Promise((resolve, reject) => {
+          res.data
+            .on('end', () => {
+              console.log('Done downloading file.');
+              resolve('');
+            })
+            .on('error', (err) => {
+              console.error('Error downloading file.');
+              reject(err);
+            })
+            .pipe(resp);
+        });
+      });
   }
 
-  @Get('/image/:uuid')
-  async getFile(@Res() res: Response, @Param('uuid') uuid) {
-    const path = await this.appService.getImagePath(uuid);
-    if (!path) return 'not found';
-    const streamFile = createReadStream(join(process.cwd(), path));
-    streamFile.pipe(res);
-  }
-
-  @Get('/video/:uuid')
-  async getVideo(@Res() res: Response, @Param('uuid') uuid, @Req() req: any) {
-    const videoPath = await this.appService.getVideoPath(uuid);
-    if (!videoPath) return 'not found';
-
+  @Get('/video/:id')
+  async getVideo(
+    @Res() resp: Response,
+    @Param('id') fileId: string,
+    @Req() req: Request,
+  ) {
+    const fileInfo = await this.appService.getFile(fileId);
     // Ensure there is a range given for the video
     const range = req.headers.range;
     if (!range) {
-      res.status(400).send('Requires Range header');
+      return resp.status(400).send('Requires Range header');
     }
 
-    const videoSize = statSync(videoPath).size;
+    const videoSize = fileInfo.size;
 
     // Parse Range
     // Example: "bytes=32324-"
@@ -85,12 +116,27 @@ export class AppController {
     };
 
     // HTTP Status 206 for Partial Content
-    res.writeHead(206, headers);
+    resp.writeHead(206, headers);
 
     // create video read stream for this particular chunk
-    const videoStream = createReadStream(videoPath, { start, end });
-
-    // Stream the video chunk to the client
-    videoStream.pipe(res);
+    await drive.files
+      .get(
+        { fileId, alt: 'media' },
+        { responseType: 'stream', headers: { Range: `bytes=${start}-${end}` } },
+      )
+      .then((res) => {
+        return new Promise((resolve, reject) => {
+          res.data
+            .on('end', () => {
+              console.log('Done downloading file.');
+              resolve('');
+            })
+            .on('error', (err) => {
+              console.error('Error downloading file.');
+              reject(err);
+            })
+            .pipe(resp);
+        });
+      });
   }
 }
